@@ -178,7 +178,7 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen justify-center items-center bg-gray-100 p-4">
+    <div className="flex flex-col w-full max-w-4xl mx-auto h-screen justify-center items-center bg-gray-100 p-4">
       <Card className="w-full max-w-6xl shadow-2xl rounded-2xl overflow-hidden border border-gray-300 p-6 m-4 bg-white">
         {/* 卡片头部 */}
         <CardHeader className="border-b py-5 px-6 bg-gradient-to-r from-blue-600 to-blue-800">
