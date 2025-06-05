@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Button, Input, Card, CardHeader, CardBody, CardFooter, Divider, Tooltip } from '@heroui/react';
+import { Button, Card, CardBody, CardFooter, CardHeader, Divider, Input, Tooltip } from '@heroui/react';
+import { useEffect, useRef, useState } from 'react';
 
 // 使用内联SVG图标代替导入
 const CopyIcon = () => (
@@ -30,7 +30,7 @@ const simulateStreamResponse = async function* (question) {
     '请问您有什么需要我协助的吗？',
     '我可以提供各种信息和建议。'
   ];
-  
+
   for (const part of responses) {
     // 模拟网络延迟
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -52,19 +52,19 @@ const Chatbot = () => {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: '您好！我是智能助手，很高兴为您服务。请问有什么我可以帮助您的吗？' }
   ]);
-  
+
   // 输入框文本状态
   const [inputText, setInputText] = useState('');
-  
+
   // 加载状态
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // 当前请求控制器
   const [currentController, setCurrentController] = useState(null);
-  
+
   // 滚动定位引用
   const messagesEndRef = useRef(null);
-  
+
   // 自动滚动到最新消息
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,48 +74,72 @@ const Chatbot = () => {
    * 调用流式API获取回答
    * @param {string} question - 用户问题
    */
+  /**
+   * 调用流式API获取回答
+   * @param {string} question - 用户问题
+   */
   const callStreamAPI = async (question) => {
     setIsLoading(true);
-    
+
     // 创建AbortController用于取消请求
     const controller = new AbortController();
     setCurrentController(controller);
-    
+
     // 添加空的AI消息占位
     setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-    
+
     try {
-      // 模拟API调用
-      // 注释: 此API为模拟，实际需替换为真实服务
-      // const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': 'Bearer ds-xxx' // 随机API Key
-      //   },
-      //   body: JSON.stringify({
-      //     model: 'deepseek-1.0',
-      //     messages: [{ role: 'user', content: question }],
-      //     stream: true
-      //   }),
-      //   signal: controller.signal
-      // });
-      
-      // 使用模拟的流式响应
-      const mockResponse = simulateStreamResponse(question);
+      // API调用
+      const response = await fetch('https://api.bigmodel.org/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-cmqi8iWV0aS8oNE2OR71OhiWwTUtXV9BsNevqaua2Bdd27NV'
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo-0125',
+          messages: [{ role: 'user', content: question }],
+          stream: true
+        }),
+        signal: controller.signal
+      });
+
+      // 检查响应状态
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
       let partialContent = '';
-      
-      for await (const char of mockResponse) {
+
+      while (true) {
         if (controller.signal.aborted) break;
-        
-        partialContent += char;
-        
-        // 更新最后一条消息的内容
-        setMessages(prev => {
-          const newMessages = [...prev];
-          newMessages[newMessages.length - 1].content = partialContent;
-          return newMessages;
-        });
+
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.trim().startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.trim().substring(6));
+              if (data.choices && data.choices[0].delta.content) {
+                partialContent += data.choices[0].delta.content;
+
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  newMessages[newMessages.length - 1].content = partialContent;
+                  return newMessages;
+                });
+              }
+            } catch (e) {
+              console.error('解析响应失败:', e);
+            }
+          }
+        }
       }
     } catch (error) {
       if (error.name !== 'AbortError') {
@@ -141,13 +165,13 @@ const Chatbot = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!inputText.trim() || isLoading) return;
-    
+
     // 添加用户消息
     setMessages(prev => [...prev, { role: 'user', content: inputText.trim() }]);
-    
+
     // 调用API
     callStreamAPI(inputText.trim());
-    
+
     // 清空输入框
     setInputText('');
   };
@@ -160,16 +184,16 @@ const Chatbot = () => {
     if (currentController) {
       currentController.abort();
     }
-    
+
     // 获取最后一条用户消息
     const lastUserMessageIndex = [...messages].reverse().findIndex(msg => msg.role === 'user');
     if (lastUserMessageIndex === -1) return;
-    
+
     const lastUserMessage = messages[messages.length - 1 - lastUserMessageIndex];
-    
+
     // 删除最后一条AI消息
     setMessages(prev => prev.slice(0, -1));
-    
+
     // 重新调用API
     callStreamAPI(lastUserMessage.content);
   };
@@ -178,38 +202,41 @@ const Chatbot = () => {
    * 处理复制消息内容
    * @param {string} text - 要复制的文本
    */
+  const [toast, setToast] = useState({ show: false, message: '' });
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
-    // 显示复制成功提示
-    alert('已复制'); // 实际项目中应使用Toast组件
+    setToast({ show: true, message: '已复制' });
+    setTimeout(() => {
+      setToast({ show: false, message: '' });
+    }, 2000);
   };
 
   return (
     <div className="flex flex-col h-screen justify-center items-center bg-gray-100 p-4">
-    <Card className="w-full max-w-6xl shadow-xl rounded-xl overflow-hidden border border-gray-200 p-6 m-2">
+      <Card className="w-full max-w-6xl shadow-2xl rounded-2xl overflow-hidden border border-gray-300 p-6 m-4 bg-white">
         {/* 卡片头部 */}
         <CardHeader className="border-b py-5 px-6 bg-gradient-to-r from-blue-600 to-blue-800">
           <h1 className="text-2xl font-bold text-center text-white drop-shadow-sm">智能助手</h1>
         </CardHeader>
-        
+
         {/* 消息显示区域 */}
         <CardBody className="flex-grow overflow-y-auto p-6 bg-white">
           <div className="flex flex-col gap-6">
             {messages.map((msg, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`relative group p-4 rounded-xl shadow-md max-w-[85%] ${msg.role === 'user' ? 'self-end bg-blue-50 border border-blue-100' : 'self-start bg-gray-50 border border-gray-100'}`}
               >
                 <div className="whitespace-pre-wrap text-gray-700 font-normal">{msg.content || '思考中...'}</div>
-                
+
                 {/* 消息操作按钮（悬停显示） */}
                 <div className={`absolute top-2 ${msg.role === 'user' ? 'left-2' : 'right-2'} flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity`}>
                   {msg.role === 'assistant' && msg.content && (
                     <Tooltip content="重试">
-                      <Button 
-                        isIconOnly 
-                        size="sm" 
-                        variant="light" 
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
                         onClick={handleRetry}
                         className="text-default-400 hover:text-default-600"
                       >
@@ -217,13 +244,13 @@ const Chatbot = () => {
                       </Button>
                     </Tooltip>
                   )}
-                  
+
                   {msg.content && (
                     <Tooltip content="复制">
-                      <Button 
-                        isIconOnly 
-                        size="sm" 
-                        variant="light" 
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
                         onClick={() => handleCopy(msg.content)}
                         className="text-default-400 hover:text-default-600"
                       >
@@ -237,9 +264,9 @@ const Chatbot = () => {
             <div ref={messagesEndRef} />
           </div>
         </CardBody>
-        
+
         <Divider />
-        
+
         {/* 输入区域 */}
         <CardFooter className="p-5 bg-gray-50 border-t border-gray-100">
           <form onSubmit={handleSubmit} className="w-full flex gap-4">
@@ -252,9 +279,9 @@ const Chatbot = () => {
               className="h-[50px] rounded-xl shadow-sm bg-white"
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit(e)}
             />
-            <Button 
-              type="submit" 
-              color="primary" 
+            <Button
+              type="submit"
+              color="primary"
               isLoading={isLoading}
               className="h-[50px] px-6 rounded-xl shadow-md font-semibold"
             >
