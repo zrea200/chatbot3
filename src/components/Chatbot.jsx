@@ -178,87 +178,76 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-4xl mx-auto h-screen justify-center items-center bg-gray-100 p-4">
-      <Card className="w-full max-w-6xl shadow-2xl rounded-2xl overflow-hidden border border-gray-300 p-6 m-4 bg-white">
-        {/* 卡片头部 */}
-        <CardHeader className="border-b py-5 px-6 bg-gradient-to-r from-blue-600 to-blue-800">
-          <h1 className="text-2xl font-bold text-center text-white drop-shadow-sm">智能助手</h1>
-        </CardHeader>
+    <div className="w-full max-w-4xl p-4 h-full">
+      <div className="border border-gray-300 rounded-xl shadow-lg overflow-hidden bg-white">
+        <Card className="w-full shadow-none">
+          {/* 卡片头部 */}
+          <CardHeader className="border-b py-5 px-6 bg-gradient-to-r from-blue-600 to-blue-800">
+            <h1 className="text-2xl font-bold text-center text-white drop-shadow-sm">智能助手</h1>
+          </CardHeader>
 
-        {/* 消息显示区域 */}
-        <CardBody className="flex-grow overflow-y-auto p-6 bg-white">
-          <div className="flex flex-col gap-6">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`relative group p-4 rounded-xl shadow-md max-w-[85%] ${msg.role === 'user' ? 'self-end bg-blue-50 border border-blue-100' : 'self-start bg-gray-50 border border-gray-100'}`}
-              >
-                <div className="whitespace-pre-wrap text-gray-700 font-normal">{msg.content || '思考中...'}</div>
+          {/* 消息区域 */}
+          <CardBody className="flex-grow overflow-y-auto p-6 bg-white">
+            <div className="flex flex-col gap-6">
+              {messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`relative group p-4 rounded-xl shadow-md max-w-[85%] ${msg.role === 'user' ? 'self-end bg-blue-50 border border-blue-100' : 'self-start bg-gray-50 border border-gray-100'}`}
+                >
+                  <div className="whitespace-pre-wrap text-gray-700 font-normal">{msg.content || '思考中...'}</div>
 
-                {/* 消息操作按钮（悬停显示） */}
-                <div className={`absolute top-2 ${msg.role === 'user' ? 'left-2' : 'right-2'} flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity`}>
-                  {msg.role === 'assistant' && msg.content && (
-                    <Tooltip content="重试">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        onPress={handleRetry}
-                        className="text-default-400 hover:text-default-600"
-                      >
-                        <RefreshIcon />
-                      </Button>
-                    </Tooltip>
-                  )}
+                  {/* 悬停按钮 */}
+                  <div className={`absolute top-2 ${msg.role === 'user' ? 'left-2' : 'right-2'} flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                    {msg.role === 'assistant' && msg.content && (
+                      <Tooltip content="重试">
+                        <Button isIconOnly size="sm" variant="light" onPress={handleRetry}>
+                          <RefreshIcon />
+                        </Button>
+                      </Tooltip>
+                    )}
 
-                  {msg.content && (
-                    <Tooltip content="复制">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        onPress={() => handleCopy(msg.content)}
-                        className="text-default-400 hover:text-default-600"
-                      >
-                        <CopyIcon />
-                      </Button>
-                    </Tooltip>
-                  )}
+                    {msg.content && (
+                      <Tooltip content="复制">
+                        <Button isIconOnly size="sm" variant="light" onPress={() => handleCopy(msg.content)}>
+                          <CopyIcon />
+                        </Button>
+                      </Tooltip>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </CardBody>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </CardBody>
 
-        <Divider />
+          <Divider />
 
-        {/* 输入区域 */}
-        <CardFooter className="p-5 bg-gray-50 border-t border-gray-100">
-          <form onSubmit={handleSubmit} className="w-full flex gap-4">
-            <Input
-              fullWidth
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="请输入问题..."
-              disabled={isLoading}
-              className="h-[50px] rounded-xl shadow-sm bg-white"
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit(e)}
-            />
-            <Button
-              type="submit"
-              color="primary"
-              isLoading={isLoading}
-              className="h-[50px] px-6 rounded-xl shadow-md font-semibold"
-            >
-              发送
-            </Button>
-          </form>
-        </CardFooter>
-      </Card>
+          {/* 输入区域 */}
+          <CardFooter className="p-5 bg-gray-50 border-t border-gray-100">
+            <form onSubmit={handleSubmit} className="w-full flex gap-4">
+              <Input
+                fullWidth
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="请输入问题..."
+                disabled={isLoading}
+                className="h-[50px] rounded-xl shadow-sm bg-white"
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit(e)}
+              />
+              <Button
+                type="submit"
+                color="primary"
+                isLoading={isLoading}
+                className="h-[50px] px-6 rounded-xl shadow-md font-semibold"
+              >
+                发送
+              </Button>
+            </form>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
-
-  );
+  )
 };
 
 export default Chatbot;

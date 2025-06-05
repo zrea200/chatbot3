@@ -1,11 +1,10 @@
 import Chatbot from './components/Chatbot'
-import Navbar from './components/Havbar'
 
 function App() {
 
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       {/* <Sider /> */}
       <Chatbot />
 
