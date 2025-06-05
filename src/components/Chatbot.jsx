@@ -22,26 +22,26 @@ const RefreshIcon = () => (
  * @param {string} question - 用户提问
  * @yields {string} - 生成的字符流
  */
-const simulateStreamResponse = async function* (question) {
-  // 此函数模拟DeepSeek API的流式响应
-  const responses = [
-    '您好！我是智能助手，',
-    '很高兴能够帮助您解答问题。',
-    '请问您有什么需要我协助的吗？',
-    '我可以提供各种信息和建议。'
-  ];
+// const simulateStreamResponse = async function* (question) {
+//   // 此函数模拟DeepSeek API的流式响应
+//   const responses = [
+//     '您好！我是智能助手，',
+//     '很高兴能够帮助您解答问题。',
+//     '请问您有什么需要我协助的吗？',
+//     '我可以提供各种信息和建议。'
+//   ];
 
-  for (const part of responses) {
-    // 模拟网络延迟
-    await new Promise(resolve => setTimeout(resolve, 300));
-    // 每个部分再按字符输出
-    for (let i = 0; i < part.length; i++) {
-      yield part[i];
-      // 字符间的打字延迟
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
-  }
-};
+//   for (const part of responses) {
+//     // 模拟网络延迟
+//     await new Promise(resolve => setTimeout(resolve, 300));
+//     // 每个部分再按字符输出
+//     for (let i = 0; i < part.length; i++) {
+//       yield part[i];
+//       // 字符间的打字延迟
+//       await new Promise(resolve => setTimeout(resolve, 50));
+//     }
+//   }
+// };
 
 /**
  * 聊天机器人组件
@@ -202,13 +202,8 @@ const Chatbot = () => {
    * 处理复制消息内容
    * @param {string} text - 要复制的文本
    */
-  const [toast, setToast] = useState({ show: false, message: '' });
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
-    setToast({ show: true, message: '已复制' });
-    setTimeout(() => {
-      setToast({ show: false, message: '' });
-    }, 2000);
   };
 
   return (
@@ -291,6 +286,7 @@ const Chatbot = () => {
         </CardFooter>
       </Card>
     </div>
+
   );
 };
 
