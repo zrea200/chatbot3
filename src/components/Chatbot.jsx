@@ -18,32 +18,6 @@ const RefreshIcon = () => (
 );
 
 /**
- * 模拟流式响应生成器
- * @param {string} question - 用户提问
- * @yields {string} - 生成的字符流
- */
-// const simulateStreamResponse = async function* (question) {
-//   // 此函数模拟DeepSeek API的流式响应
-//   const responses = [
-//     '您好！我是智能助手，',
-//     '很高兴能够帮助您解答问题。',
-//     '请问您有什么需要我协助的吗？',
-//     '我可以提供各种信息和建议。'
-//   ];
-
-//   for (const part of responses) {
-//     // 模拟网络延迟
-//     await new Promise(resolve => setTimeout(resolve, 300));
-//     // 每个部分再按字符输出
-//     for (let i = 0; i < part.length; i++) {
-//       yield part[i];
-//       // 字符间的打字延迟
-//       await new Promise(resolve => setTimeout(resolve, 50));
-//     }
-//   }
-// };
-
-/**
  * 聊天机器人组件
  * @returns {JSX.Element} - 聊天界面
  */
@@ -70,12 +44,9 @@ const Chatbot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+
   /**
-   * 调用流式API获取回答
-   * @param {string} question - 用户问题
-   */
-  /**
-   * 调用流式API获取回答
+   * 调用API获取回答
    * @param {string} question - 用户问题
    */
   const callStreamAPI = async (question) => {
@@ -97,7 +68,7 @@ const Chatbot = () => {
           'Authorization': 'Bearer sk-cmqi8iWV0aS8oNE2OR71OhiWwTUtXV9BsNevqaua2Bdd27NV'
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo-0125',
+          model: 'o1-mini',
           messages: [{ role: 'user', content: question }],
           stream: true
         }),
@@ -232,7 +203,7 @@ const Chatbot = () => {
                         isIconOnly
                         size="sm"
                         variant="light"
-                        onClick={handleRetry}
+                        onPress={handleRetry}
                         className="text-default-400 hover:text-default-600"
                       >
                         <RefreshIcon />
@@ -246,7 +217,7 @@ const Chatbot = () => {
                         isIconOnly
                         size="sm"
                         variant="light"
-                        onClick={() => handleCopy(msg.content)}
+                        onPress={() => handleCopy(msg.content)}
                         className="text-default-400 hover:text-default-600"
                       >
                         <CopyIcon />
